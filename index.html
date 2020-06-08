@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf8" />
+    <title>GOG Galaxy DB viewer</title>
+    <style>
+        html { height: 100%; }
+        body {
+            height: 100%;
+            margin: 0;
+            font: 16px sans-serif;
+            background: #272523;
+            color: #eee;
+        }
+        #app { min-height: 100%; }
+        [v-cloak] { display: none; }
+        [v-cloak].loading { display: block; }
+        .centered {
+            text-align: center;
+            vertical-align: middle;
+            line-height: 100vh;
+        }
+        .item-parent {
+            float: left;
+        }
+        @media screen and (min-width: 1500px) {
+            .item-parent { width: 50%; }
+        }
+        @media screen and (min-width: 2000px) {
+            .item-parent { width: 33.3%; }
+        }
+        @media screen and (min-width: 2500px) {
+            .item-parent { width: 25%; }
+        }
+        @media screen and (min-width: 3000px) {
+            .item-parent { width: 16.6%; }
+        }
+        .item {
+            display: flex;
+            margin: 5px;
+            position: relative;
+        }
+        .cover {
+            flex: 0;
+        }
+        .content {
+            position: relative;
+            flex: 1;
+            margin-left: 10px;
+            height: 241px;
+            overflow: hidden;
+        }
+        .platform-container {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 3px;
+            height: 23px;
+        }
+        .platform-image {
+            margin: 2px;
+        }
+        h2 { margin-top: 0; margin-bottom: 10px; }
+        .summary { white-space: pre-wrap; }
+        .gradient {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 24px;
+            background: linear-gradient(0, rgba(39,37,35,1) 0%, rgba(39,37,35,0) 100%);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+<template type="text/x-template" id="gameViewTemplate">
+    <div class="item-parent">
+        <div class="item">
+            <img class="cover" loading="lazy" :src="game.verticalCover" :alt="game.title" height="241" width="171" />
+            <div class="platform-container">
+                <img class="platform-image" v-for="plat in game.platforms" :src="`icons/${plat}.svg`" :alt="plat" width="18" height="18"/>
+            </div>
+            <div class="content">
+                <div class="gradient"></div>
+                <h2 @click="showDetails(game)">
+                    {{ game.title }}
+                </h2>
+                <div>{{ game.genres.join(", ") }} |  {{ game.themes.join(", ") }}</div>
+                <p class="summary">{{ game.summary }}</p>
+            </div>
+        </div>
+    </div>
+</template>
+<div id="app" @drop.prevent="loadDbFile" @dragover.prevent>
+    <div v-if="loading" class="centered loading">Loading...</div>
+    <div v-cloak>
+        <div v-if="!games.length && !loading" class="centered">Drop galaxy-2.0.db here to begin (in "C:\ProgramData\GOG.com\Galaxy\storage" by default)</div>
+        <div id="games">
+            <game-view v-for="game in games" :game="game" :key="game.gameId"></game-view>
+        </div>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.3.0/dist/sql-wasm.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
