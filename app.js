@@ -21,9 +21,18 @@ function getSqlJs() {
     }));
 }
 
+function initGames(games) {
+    games && games.forEach(g => {
+        g.textIndex = [g.title, ...g.genres, ...g.themes, g.summary].join("\t").toLowerCase();
+    });
+    return games;
+}
+
 const data = {
     loading: false,
-    games: games || []
+    games: initGames(games) || [],
+    hiddenPlatforms: {},
+    filter: ""
 };
 
 Vue.component("game-view", {
@@ -37,6 +46,22 @@ Vue.component("game-view", {
 new Vue({
     el: "#app",
     data: data,
+    computed: {
+        platforms: function() {
+            const plats = new Set();
+            for (let game of this.games) {
+                for (let plat of game.platforms) {
+                    plats.add(plat);
+                }
+            }
+            return Array.from(plats).sort();
+        },
+        filterTokens: function() {
+            if (!this.filter)
+                return null;
+            return this.filter.toLowerCase().split(/\s+/g);
+        }
+    },
     methods: {
         loadDbFile: function (ev) {
             data.loading = true;
@@ -44,12 +69,25 @@ new Vue({
             const r = new FileReader();
             r.onload = () => {
                 getSqlJs().then(sqlJs => {
-                    const db = new sqlJs.Database(new Uint8Array(r.result));
-                    importGames(db);
-                    data.loading = false;
+                    setTimeout(() => {
+                        // in a timeout to ensure loading text is visible
+                        const db = new sqlJs.Database(new Uint8Array(r.result));
+                        importGames(db);
+                        data.loading = false;
+                    });
                 });
-            }
+            };
             r.readAsArrayBuffer(file);
+        },
+        togglePlatform: function (plat) {
+            Vue.set(data.hiddenPlatforms, plat, !data.hiddenPlatforms[plat]);
+        },
+        isGameVisible: function(game) {
+            if (!game.platforms.some(p => !this.hiddenPlatforms[p]))
+                return false;
+            if (this.filterTokens)
+                return this.filterTokens.every(filter => game.textIndex.indexOf(filter) !== -1);
+            return true;
         }
     }
 });
@@ -110,6 +148,6 @@ function importGames(db) {
         console.error(err);
         localStorage.removeItem("ggdb_games");
     }
-    data.games = games;
+    data.games = initGames(games);
 }
 })();
