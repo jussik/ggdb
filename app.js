@@ -68,7 +68,7 @@ function processTitles(type, obj) {
 }
 function importGames(db) {
     const stmt = db.prepare(`
-        select rp.gameid, ifnull(pc.platform, 'gog') as platform, t.type, p.value
+        select rp.gameid, p.releasekey, ifnull(pc.platform, 'gog') as platform, t.type, p.value
         from GamePieces p
         join ReleaseProperties rp on p.releasekey = rp.releasekey
             and isvisibleinlibrary = 1
@@ -79,28 +79,29 @@ function importGames(db) {
     const gamesById = {};
     try {
         while (stmt.step()) {
-            const [gameId, platform, type, json] = stmt.get();
-            let game = gamesById[gameId];
-            if (!game) {
-                game = gamesById[gameId] = processTitles(type, JSON.parse(json));
-                game.gameId = gameId;
-                game.platforms = new Set([platform]);
-                game.primaryPlatform = platform;
-            } else {
-                game.platforms.add(platform);
-                if (game.primaryPlatform === platform) {
-                    Object.assign(game, processTitles(type, JSON.parse(json)));
-                }
-            }
+            const [gameId, releaseKey, platform, type, json] = stmt.get();
+            const game = gamesById[gameId] || (gamesById[gameId] = { gameId });
+            const release = game[releaseKey] || (game[releaseKey] = { platform, releaseKey });
+            Object.assign(release, processTitles(type, JSON.parse(json)));
         }
     } finally {
         stmt.free();
     }
     const games = Object.values(gamesById)
-        .filter(g => g.verticalCover) // games without verticalCover are not visible in galaxy either
+        .map(rs => {
+            const sortedReleases = Object.values(rs)
+                // games without verticalCover are not visible in galaxy either
+                .filter(g => g.verticalCover)
+                // sort first by title length, then by platform name to get rid of "Windows 10 edition" and "Origin Key"
+                .sort((a, b) => (a.title.length - b.title.length) || a.platform.localeCompare(b.platform));
+            return sortedReleases.length ? { ...sortedReleases[0], otherPlatforms: sortedReleases.slice(1) } : null;
+        })
+        .filter(r => r)
         .sort((a, b) => (a.sortingTitle || a.title).localeCompare(b.sortingTitle || b.title));
     games.forEach(g => {
-        g.platforms = Array.from(g.platforms.values()).sort(); // Set to Array
+        const plats = new Set(g.otherPlatforms.map(r => r.platform));
+        plats.add(g.platform);
+        g.platforms = Array.from(plats.values()).sort();
     });
     try {
         localStorage.ggdb_games = LZString.compressToUTF16(JSON.stringify(games));
