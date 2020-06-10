@@ -54,13 +54,14 @@ window.app = new Vue({
                     console.error(`Error loading ${key} from localStorage`);
                     console.error(err);
                     localStorage.removeItem("ggdb_games");
+                    return null;
                 }
             }
         }
 
-        this.games = loadFromStorage("ggdb_games");
+        this.games = loadFromStorage("ggdb_games") || this.games;
         this.prepareGames();
-        this.igdb = loadFromStorage("ggdb_igdb");
+        this.igdb = loadFromStorage("ggdb_igdb") || this.igdb;
         console.log("Call app.fetchGameDetailsBatch() to fetch any missing details from IGDB");
     },
     methods: {
