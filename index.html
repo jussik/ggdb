@@ -98,9 +98,9 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 35px;
             line-height: 32px;
             margin: 0 5px;
+            padding-bottom: 3px;
             background: #272523;
         }
         #filter > div {
@@ -149,6 +149,8 @@
                          :class="{ hide: hiddenPlatforms[plat] }" @click="togglePlatform(plat)" />
                 </div>
                 <input type="text" v-model="filter" placeholder="Find" />
+                <button @click="shuffle()">shuffle</button>
+                <button @click="sortByName()">sort</button>
             </div>
         </div>
         <div id="games">
