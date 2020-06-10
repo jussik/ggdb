@@ -7,10 +7,14 @@ function getSqlJs() {
 }
 
 Vue.component("game-view", {
-    props: ["game"],
+    props: ["game", "igdb"],
     template: "#gameViewTemplate",
     methods: {
-        showDetails: game => console.log(game.title, JSON.parse(JSON.stringify(game)), JSON.parse(JSON.stringify(app.igdb[game.gameId])))
+        showDetails: function() {
+            console.log(this.$props.game.title);
+            console.log(JSON.parse(JSON.stringify(this.$props.game)));
+            console.log(JSON.parse(JSON.stringify(this.$props.igdb)));
+        }
     }
 });
 
@@ -60,15 +64,20 @@ window.app = new Vue({
         }
 
         this.games = loadFromStorage("ggdb_games") || this.games;
-        this.prepareGames();
         this.igdb = loadFromStorage("ggdb_igdb") || this.igdb;
+        this.prepareGames();
         console.log("Call app.fetchGameDetailsBatch() to fetch any missing details from IGDB");
     },
     methods: {
+        updateGameIndex: function(g) {
+            const tokens = [g.title, ...g.genres, ...g.themes, g.summary];
+            const igdb = this.igdb[g.gameId];
+            if (igdb && igdb.keywords)
+                tokens.push(...igdb.keywords);
+            g._textIndex = tokens.join("\t").toLowerCase();
+        },
         prepareGames: function() {
-            this.games.forEach(g => {
-                g._textIndex = [g.title, ...g.genres, ...g.themes, g.summary].join("\t").toLowerCase();
-            });
+            this.games.forEach(g => this.updateGameIndex(g));
             this.sortByName();
         },
         loadDbFile: function (ev) {
@@ -168,14 +177,20 @@ window.app = new Vue({
         sortByName: function() {
             this.games.sort((a, b) => (a.sortingTitle || a.title).localeCompare(b.sortingTitle || b.title));
         },
-        sortByRating: function() {
+        sortByIgdbValue: function(key) {
             this.games.sort((a, b) => {
                 const ia = this.igdb[a.gameId];
                 const ib = this.igdb[b.gameId];
-                return (ib && ib.total_rating || 0) - (ia && ia.total_rating || 0)
+                return (ib && ib[key] || 0) - (ia && ia[key] || 0)
                     // fall back to sorting by title if same score
                     || (a.sortingTitle || a.title).localeCompare(b.sortingTitle || b.title);
             });
+        },
+        sortByRating: function() {
+            this.sortByIgdbValue("rating");
+        },
+        sortByRatingCount: function() {
+            this.sortByIgdbValue("ratingCount");
         },
         shuffle: function() {
             const games = this.games;
@@ -253,6 +268,29 @@ window.app = new Vue({
                 console.timeEnd("igdb query " + resource);
             }
         },
+        initIgDbEntry: function (game) {
+            if (!game)
+                return {};
+            const o = { rating: game.total_rating, ratingCount: game.total_rating_count };
+            if (game.keywords && game.keywords.length > 0) {
+                o.keywords = game.keywords.map(k => k.name);
+            }
+            const ttb = game.time_to_beat;
+            if (ttb) {
+                function getHours(seconds) {
+                    const tenthHours = Math.round(seconds / 360);
+                    return tenthHours > 100 ? tenthHours : Math.round(seconds / 360) / 10; // show decimal if <10h
+                }
+
+                if (ttb.normally)
+                    o.normalHours = getHours(ttb.normally);
+                if (ttb.hastly)
+                    o.fastHours = getHours(ttb.hastly);
+                if (ttb.completely)
+                    o.completeHours = getHours(ttb.completely);
+            }
+            return o;
+        },
         fetchGameDetailsBatchBySteamIdAsync: async function () {
             const gameEntries = this.games
                 .filter(g => g.steamAppId && !this.igdb[g.gameId] && !g.igdbSteamAttempted)
@@ -274,11 +312,8 @@ window.app = new Vue({
             results.forEach(r => {
                 const game = gamesBySteamId[r.uid];
                 game.igdbSteamAttempted = true;
-                Vue.set(this.igdb, game.gameId, {
-                    ...r.game,
-                    keywords: (r.gameId && r.game.keywords) ? r.game.keywords.map(k => k.name) : [],
-                    id: undefined
-                });
+                Vue.set(this.igdb, game.gameId, this.initIgDbEntry(r.game));
+                this.updateGameIndex(game);
             });
 
             console.log(`got ${results.length} results`);
@@ -316,12 +351,8 @@ window.app = new Vue({
             results.forEach(g => {
                 const game = gamesByTitle[g.name.toLowerCase()];
                 delete game.igdbTitleAttempted;
-                Vue.set(this.igdb, game.gameId, {
-                    ...g,
-                    keywords: g.keywords ? g.keywords.map(k => k.name) : [],
-                    id: undefined,
-                    name: undefined
-                });
+                Vue.set(this.igdb, game.gameId, this.initIgDbEntry(g));
+                this.updateGameIndex(game);
             });
 
             console.log(`got ${results.length} results`);
@@ -342,11 +373,8 @@ window.app = new Vue({
                 return false;
 
             const g = results[0];
-            Vue.set(this.igdb, game.gameId, {
-                ...g,
-                keywords: g.keywords ? g.keywords.map(k => k.name) : [],
-                id: undefined
-            });
+            Vue.set(this.igdb, game.gameId, this.initIgDbEntry(g));
+            this.updateGameIndex(game);
 
             return true;
         },
@@ -379,7 +407,7 @@ window.app = new Vue({
             return changed;
         },
         fetchGameDetailsBatch: function () {
-            this.fetchGameDetailsBatchAsync().then(r => console.log(r ? "More data available." : "All data fetched."), console.error);
+            this.fetchGameDetailsBatchAsync().then(r => console.log(r ? "Data fetched, more may be available." : "No fetch necessary."), console.error);
         }
     }
 });

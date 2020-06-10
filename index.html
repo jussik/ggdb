@@ -129,7 +129,10 @@
                 <h2 @click="showDetails(game)">
                     {{ game.title }}
                 </h2>
-                <div>{{ game.genres.join(", ") }} |  {{ game.themes.join(", ") }}</div>
+                <div>
+                    <span v-if="igdb.rating">{{ igdb.rating >> 0 }}% ({{ igdb.ratingCount }}) | </span>
+                    {{ game.genres.join(", ") }} | {{ game.themes.join(", ") }}
+                </div>
                 <p class="summary">{{ game.summary }}</p>
             </div>
         </div>
@@ -152,10 +155,11 @@
                 <button @click="shuffle()">shuffle</button>
                 <button @click="sortByName()">by name</button>
                 <button @click="sortByRating()">by rating</button>
+                <button @click="sortByRatingCount()">by rating count</button>
             </div>
         </div>
         <div id="games">
-            <game-view v-for="game in games" :game="game" :key="game.gameId" :class="{ hide: !isGameVisible(game) }"></game-view>
+            <game-view v-for="game in games" :game="game" :igdb="igdb[game.gameId]||{}" :key="game.gameId" :class="{ hide: !isGameVisible(game) }"></game-view>
         </div>
         <div v-if="!games.length && !loading" class="centered">
             <span>Drop galaxy-2.0.db here to begin (in "C:\ProgramData\GOG.com\Galaxy\storage" by default)</span>
