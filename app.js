@@ -14,6 +14,7 @@ Vue.component("game-view", {
             console.log(this.$props.game.title);
             console.log(JSON.parse(JSON.stringify(this.$props.game)));
             console.log(JSON.parse(JSON.stringify(this.$props.igdb)));
+            this.$emit("show-screenshots", this.$props.game.screenshots);
         }
     }
 });
@@ -25,7 +26,11 @@ window.app = new Vue({
         games: [],
         igdb: {},
         hiddenPlatforms: {},
-        filter: ""
+        filter: "",
+        screenshots: []
+    },
+    components: {
+        agile: VueAgile
     },
     computed: {
         platforms: function() {
@@ -146,6 +151,9 @@ window.app = new Vue({
                     const plats = new Set(g.otherPlatforms.map(r => r.platform));
                     plats.add(g.platform);
                     const steamRelease = g.releases.find(gr => gr.startsWith("steam_"));
+                    let year = g.releaseDate && new Date(g.releaseDate * 1000).getFullYear();
+                    if (!year || year <= 1970)
+                        year = null;
                     return {
                         gameId: g.gameId,
                         steamAppId: steamRelease ? steamRelease.split("_")[1] : undefined,
@@ -155,7 +163,11 @@ window.app = new Vue({
                         genres: g.genres,
                         themes: g.themes,
                         summary: g.summary,
-                        platforms: Array.from(plats.values()).sort()
+                        year: year,
+                        platforms: Array.from(plats.values()).sort(),
+                        screenshots: g.screenshots
+                            ?  g.screenshots.map(f => f.replace("{formatter}", "").replace("{ext}", "jpg"))
+                            : []
                     }
                 });
             console.timeEnd("importing");
@@ -176,6 +188,13 @@ window.app = new Vue({
         },
         sortByName: function() {
             this.games.sort((a, b) => (a.sortingTitle || a.title).localeCompare(b.sortingTitle || b.title));
+        },
+        sortByYear: function() {
+            this.games.sort((a, b) => {
+                return (b.year || 0) - (a.year || 0)
+                    // fall back to sorting by title if same score
+                    || (a.sortingTitle || a.title).localeCompare(b.sortingTitle || b.title);
+            });
         },
         sortByIgdbValue: function(key) {
             this.games.sort((a, b) => {
@@ -199,6 +218,9 @@ window.app = new Vue({
                 [games[i], games[j]] = [games[j], games[i]];
             }
             games.splice(); // notify Vue
+        },
+        showScreenshots: function (screenshots) {
+            this.screenshots = screenshots;
         },
         saveImpl: function (caller, key, data) {
             console.time("saving " + key);

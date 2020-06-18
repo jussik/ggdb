@@ -4,7 +4,10 @@
     <meta charset="utf8" />
     <title>GOG Galaxy DB viewer</title>
     <style>
-        html { height: 100%; }
+        html {
+            height: 100%;
+        }
+
         body {
             height: 100%;
             margin: 0;
@@ -12,12 +15,18 @@
             background: #272523;
             color: #eee;
         }
-        #app { min-height: 100%; }
-        [v-cloak] { display: none; }
-        [v-cloak].loading { display: block; }
+
+        #app {
+            min-height: 100%;
+        }
+
+        [v-cloak] {
+            display: none;
+        }
+
         .centered {
             position: fixed;
-            z-index: 2;
+            z-index: 3;
             top: 0;
             bottom: 0;
             left: 0;
@@ -27,109 +36,29 @@
             line-height: 100vh;
             background: rgba(39, 37, 35, 0.5);
         }
-        .centered > span {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 5px;
-            border-radius: 5px;
-        }
-        .item-parent {
-            float: left;
-        }
-        @media screen and (min-width: 1500px) {
-            .item-parent { width: 50%; }
-        }
-        @media screen and (min-width: 2000px) {
-            .item-parent { width: 33.3%; }
-        }
-        @media screen and (min-width: 2500px) {
-            .item-parent { width: 25%; }
-        }
-        @media screen and (min-width: 3000px) {
-            .item-parent { width: 16.6%; }
-        }
-        .item {
-            display: flex;
-            margin: 5px;
-            position: relative;
-        }
-        .cover {
-            flex: 0;
-        }
-        .content {
-            position: relative;
-            flex: 1;
-            margin-left: 10px;
-            height: 241px;
-            overflow: hidden;
-        }
-        .platform-container {
-            position: absolute;
-            top: 3px;
-            left: 3px;
-            background: rgba(255,255,255,0.7);
-            border-radius: 3px;
-            height: 23px;
-        }
-        .platform-container.filter {
-            position: initial;
-            display: inline-block;
-            margin: 6px 6px 0 6px;
-        }
-        .platform-image {
-            margin: 2px;
-        }
-        .platform-image.hide {
-            opacity: 0.5;
-        }
-        h2 { margin-top: 0; margin-bottom: 10px; }
-        .summary { white-space: pre-wrap; }
-        .gradient {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 24px;
-            background: linear-gradient(0, rgba(39,37,35,1) 0%, rgba(39,37,35,0) 100%);
-            pointer-events: none;
-        }
-        #nav {
-            position: fixed;
-            z-index: 1;
-            top: 0;
-            left: 0;
-            right: 0;
-            line-height: 32px;
-            margin: 0 5px;
-            padding-bottom: 3px;
-            background: #272523;
-        }
-        #filter > div {
-            float: left;
-        }
-        #help {
-            float: right;
-        }
-        #games {
-            margin-top: 32px;
-            clear: both;
-        }
-        #games > .hide { display: none; }
+
+            .centered > span {
+                background: rgba(0, 0, 0, 0.3);
+                padding: 5px;
+                border-radius: 5px;
+            }
     </style>
 </head>
 <body>
 <template type="text/x-template" id="gameViewTemplate">
     <div class="item-parent">
         <div class="item">
-            <img class="cover" loading="lazy" :src="game.verticalCover" :alt="game.title" height="241" width="171" />
+            <img class="cover" loading="lazy" :src="game.verticalCover" :alt="game.title" height="241" width="171" @click="showDetails(game)" />
             <div class="platform-container">
                 <img class="platform-image" v-for="plat in game.platforms" :src="`icons/${plat}.svg`" :alt="plat" width="18" height="18"/>
             </div>
             <div class="content">
                 <div class="gradient"></div>
-                <h2 @click="showDetails(game)">
+                <h2>
                     {{ game.title }}
                 </h2>
                 <div>
+                    <span v-if="game.year">{{ game.year }} | </span>
                     <span v-if="igdb.rating">{{ igdb.rating >> 0 }}% ({{ igdb.ratingCount }}) | </span>
                     {{ game.genres.join(", ") }} | {{ game.themes.join(", ") }}
                 </div>
@@ -154,21 +83,33 @@
                 <input type="text" v-model="filter" placeholder="Find" />
                 <button @click="shuffle()">shuffle</button>
                 <button @click="sortByName()">by name</button>
+                <button @click="sortByYear()">by year</button>
                 <button @click="sortByRating()">by rating</button>
                 <button @click="sortByRatingCount()">by rating count</button>
             </div>
         </div>
         <div id="games">
-            <game-view v-for="game in games" :game="game" :igdb="igdb[game.gameId]||{}" :key="game.gameId" :class="{ hide: !isGameVisible(game) }"></game-view>
+            <game-view v-for="game in games" :game="game" :igdb="igdb[game.gameId]||{}" @show-screenshots="showScreenshots"
+                       :key="game.gameId" :class="{ hide: !isGameVisible(game) }"></game-view>
         </div>
         <div v-if="!games.length && !loading" class="centered">
             <span>Drop galaxy-2.0.db here to begin (in "C:\ProgramData\GOG.com\Galaxy\storage" by default)</span>
+        </div>
+        <div v-if="screenshots.length" id="screenshots">
+            <agile>
+                <div class="slide" v-for="s in screenshots" :key="s" @click="showScreenshots([])">
+                    <img :src="s" loading="lazy" />
+                </div>
+            </agile>
         </div>
     </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.3.0/dist/sql-wasm.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
+<script src="https://unpkg.com/vue-agile"></script>
+<link rel="stylesheet" href="https://unpkg.com/vue-agile/dist/VueAgile.css">
+<link rel="stylesheet" href="app.css">
 <script src="app.js"></script>
 </body>
 </html>
