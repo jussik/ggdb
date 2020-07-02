@@ -117,7 +117,7 @@ window.app = new Vue({
 
             console.time("importing");
             const stmt = db.prepare(`
-                select rp.gameid, p.releasekey, ifnull(pc.platform, 'gog') as platform, t.type, p.value
+                select rp.gameid, p.releasekey, ifnull(pc.platform, 'gog') as platform, ppd.addeddate, t.type, p.value
                 from GamePieces p
                 join LibraryReleases lr on p.releasekey = lr.releasekey
                 join ReleaseProperties rp on p.releasekey = rp.releasekey
@@ -125,13 +125,14 @@ window.app = new Vue({
                 join GamePieceTypes t on p.gamePieceTypeId = t.id
                 left join PlatformConnections pc on p.releasekey like pc.platform || '_%'
                     and pc.connectionstate = 'Connected'
+                left join ProductPurchaseDates ppd on ppd.gamereleasekey = p.releasekey
                 where pc.platform is not null or p.releasekey like 'gog_%';`);
             const gamesById = {};
             try {
                 while(stmt.step()) {
-                    const [gameId, releaseKey, platform, type, json] = stmt.get();
+                    const [gameId, releaseKey, platform, addedDate, type, json] = stmt.get();
                     const game = gamesById[gameId] || (gamesById[gameId] = { });
-                    const release = game[releaseKey] || (game[releaseKey] = { gameId, platform });
+                    const release = game[releaseKey] || (game[releaseKey] = { gameId, platform, addedDate });
                     Object.assign(release, processTitles(type, JSON.parse(json)));
                 }
             } finally {
@@ -145,7 +146,13 @@ window.app = new Vue({
                         .filter(g => g.verticalCover)
                         // sort first by title length, then by platform name to get rid of "Windows 10 edition" and "Origin Key"
                         .sort((a, b) => (a.title.length - b.title.length) || a.platform.localeCompare(b.platform));
-                    return sortedReleases.length ? { ...sortedReleases[0], otherPlatforms: sortedReleases.slice(1) } : null;
+                    return sortedReleases.length ? {
+                        ...sortedReleases[0],
+                        otherPlatforms: sortedReleases.slice(1),
+                        addedDate: sortedReleases
+                            .map(r => r.addedDate)
+                            .reduce((a, b) => (a || "").localeCompare(b || "") ? b : a, "")
+                    } : null;
                 })
                 .filter(r => r)
                 .map(g => {
@@ -157,6 +164,7 @@ window.app = new Vue({
                         year = null;
                     return {
                         gameId: g.gameId,
+                        addedDate: g.addedDate || "",
                         steamAppId: steamRelease ? steamRelease.split("_")[1] : undefined,
                         title: g.title,
                         sortingTitle: g.title !== g.sortingTitle ? g.sortingTitle : undefined,
@@ -196,6 +204,10 @@ window.app = new Vue({
                     // fall back to sorting by title if same score
                     || (a.sortingTitle || a.title).localeCompare(b.sortingTitle || b.title);
             });
+        },
+        sortByAdded: function() {
+            this.games.sort((a, b) => b.addedDate.localeCompare(a.addedDate)
+                || (a.sortingTitle || a.title).localeCompare(b.sortingTitle || b.title));
         },
         sortByIgdbValue: function(key) {
             this.games.sort((a, b) => {

@@ -73,7 +73,10 @@
     </div>
     <div v-cloak>
         <div id="nav" v-if="games.length">
-            <div id="help">Drop galaxy-2.0.db onto the page to update games (in "C:\ProgramData\GOG.com\Galaxy\storage" by default)</div>
+            <div id="help">
+                Drop galaxy-2.0.db onto the page to update games (in "C:\ProgramData\GOG.com\Galaxy\storage" by default)
+                <button @click="fetchGameDetailsBatch()">igdb</button>
+            </div>
             <div id="filter">
                 <div>Filter:</div>
                 <div class="platform-container filter">
@@ -84,6 +87,7 @@
                 <button @click="shuffle()">shuffle</button>
                 <button @click="sortByName()">by name</button>
                 <button @click="sortByYear()">by year</button>
+                <button @click="sortByAdded()">by added</button>
                 <button @click="sortByRating()">by rating</button>
                 <button @click="sortByRatingCount()">by rating count</button>
             </div>
