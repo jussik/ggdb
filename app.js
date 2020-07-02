@@ -119,6 +119,7 @@ window.app = new Vue({
             const stmt = db.prepare(`
                 select rp.gameid, p.releasekey, ifnull(pc.platform, 'gog') as platform, t.type, p.value
                 from GamePieces p
+                join LibraryReleases lr on p.releasekey = lr.releasekey
                 join ReleaseProperties rp on p.releasekey = rp.releasekey
                     and isvisibleinlibrary = 1
                 join GamePieceTypes t on p.gamePieceTypeId = t.id
