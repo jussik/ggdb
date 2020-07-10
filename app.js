@@ -162,12 +162,14 @@ window.app = new Vue({
                     let year = g.releaseDate && new Date(g.releaseDate * 1000).getFullYear();
                     if (!year || year <= 1970)
                         year = null;
+                    const title = g.title || g.originalTitle;
+                    const sortingTitle = g.sortingTitle || g.originalSortingTitle;
                     return {
                         gameId: g.gameId,
                         addedDate: g.addedDate || "",
                         steamAppId: steamRelease ? steamRelease.split("_")[1] : undefined,
-                        title: g.title,
-                        sortingTitle: g.title !== g.sortingTitle ? g.sortingTitle : undefined,
+                        title,
+                        sortingTitle: title !== sortingTitle ? sortingTitle : undefined,
                         verticalCover: g.verticalCover,
                         genres: g.genres,
                         themes: g.themes,
