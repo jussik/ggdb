@@ -381,7 +381,7 @@ window.app = new Vue({
             const gamesByTitle = Object.fromEntries(gameEntries);
             const results = await this.queryIgdb("games", `
                 fields name, total_rating, total_rating_count, keywords.name, time_to_beat.*;
-                where ${gameEntries.map(([s]) => `name ~ "${s.replace('"', '\\"')}"`).join(" | ")};
+                where ${gameEntries.map(([s]) => `name ~ "${s.replace(/"/g, '\\"')}"`).join(" | ")};
                 sort total_rating_count desc;
                 limit 500;`);
 
@@ -402,7 +402,7 @@ window.app = new Vue({
         fetchGameAlternativeTitleAsync: async function (game, title) {
             const results = await this.queryIgdb("games", `
                 fields total_rating, total_rating_count, keywords.name, time_to_beat.*;
-                where name ~ "${title.replace('"', '\\"')}";
+                where name ~ "${title.replace(/"/g, '\\"')}";
                 sort total_rating_count desc;
                 limit 1;`);
 
