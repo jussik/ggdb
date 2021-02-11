@@ -126,7 +126,9 @@ window.app = new Vue({
                 left join PlatformConnections pc on p.releasekey like pc.platform || '_%'
                     and pc.connectionstate = 'Connected'
                 left join ProductPurchaseDates ppd on ppd.gamereleasekey = p.releasekey
-                where pc.platform is not null or p.releasekey like 'gog_%';`);
+                left join SubscriptionReleases sub on sub.licenseid = lr.id
+                where (pc.platform is not null or p.releasekey like 'gog_%')
+                    and (pc.platform != 'xboxone' OR sub.id is not null);`);
             const gamesById = {};
             try {
                 while(stmt.step()) {
