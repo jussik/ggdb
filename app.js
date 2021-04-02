@@ -86,8 +86,12 @@ window.app = new Vue({
             this.sortByName();
         },
         loadDbFile: function (ev) {
-            this.loading = true;
+            if (!ev.dataTransfer)
+                return;
             const file = ev.dataTransfer.files[0];
+            if (!file || file.name !== 'galaxy-2.0.db')
+                return;
+            this.loading = true;
             const r = new FileReader();
             r.onload = () => {
                 getSqlJs().then(sqlJs => {
