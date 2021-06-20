@@ -59,7 +59,6 @@
                 </h2>
                 <div>
                     <span v-if="game.year">{{ game.year }} | </span>
-                    <span v-if="igdb.rating">{{ igdb.rating >> 0 }}% ({{ igdb.ratingCount }}) | </span>
                     {{ game.genres.join(", ") }} | {{ game.themes.join(", ") }}
                 </div>
                 <p class="summary">{{ game.summary }}</p>
@@ -75,7 +74,6 @@
         <div id="nav" v-if="games.length">
             <div id="help">
                 Drop galaxy-2.0.db onto the page to update games (in "C:\ProgramData\GOG.com\Galaxy\storage" by default)
-                <button @click="fetchGameDetailsBatch()">igdb</button>
             </div>
             <div id="filter">
                 <div>Filter:</div>
@@ -88,12 +86,10 @@
                 <button @click="sortByName()">by name</button>
                 <button @click="sortByYear()">by year</button>
                 <button @click="sortByAdded()">by added</button>
-                <button @click="sortByRating()">by rating</button>
-                <button @click="sortByRatingCount()">by rating count</button>
             </div>
         </div>
         <div id="games">
-            <game-view v-for="game in games" :game="game" :igdb="igdb[game.gameId]||{}" @show-screenshots="showScreenshots"
+            <game-view v-for="game in games" :game="game" @show-screenshots="showScreenshots"
                        :key="game.gameId" :class="{ hide: !isGameVisible(game) }"></game-view>
         </div>
         <div v-if="!games.length && !loading" class="centered">
