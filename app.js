@@ -25,7 +25,8 @@ window.app = new Vue({
         games: [],
         hiddenPlatforms: {},
         filter: "",
-        screenshots: []
+        screenshots: [],
+        npointId: null
     },
     components: {
         agile: VueAgile
@@ -47,11 +48,11 @@ window.app = new Vue({
         }
     },
     created: function() {
-        const npointId = new URLSearchParams(location.search).get("npoint");
-        if (npointId) {
+        this.npointId = new URLSearchParams(location.search).get("npoint");
+        if (this.npointId) {
             const self = this;
             this.loading = true;
-            fetch(`https://api.npoint.io/${npointId}`)
+            fetch(`https://api.npoint.io/${this.npointId}`)
                 .then(r => r.json())
                 .then(function(games) {
                     self.games = games;
@@ -205,6 +206,11 @@ window.app = new Vue({
             elem.select();
             document.execCommand("copy");
             elem.value = "";
+            if (!this.npointId) {
+                alert("Data copied to clipboard");
+            } else if(confirm("Data copied to clipboard - open npoint editor page?")){
+                window.open(`https://www.npoint.io/docs/${this.npointId}`, "_blank");
+            }
         },
         togglePlatform: function (plat) {
             Vue.set(this.hiddenPlatforms, plat, !this.hiddenPlatforms[plat]);
