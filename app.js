@@ -199,6 +199,13 @@ window.app = new Vue({
             this.saveGames();
             this.prepareGames();
         },
+        toClipboard: function() {
+            const elem = document.getElementById("exportElem");
+            elem.value = JSON.stringify(this.games);
+            elem.select();
+            document.execCommand("copy");
+            elem.value = "";
+        },
         togglePlatform: function (plat) {
             Vue.set(this.hiddenPlatforms, plat, !this.hiddenPlatforms[plat]);
         },
