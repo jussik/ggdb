@@ -47,6 +47,14 @@
                 padding: 5px;
                 border-radius: 5px;
             }
+
+        .steam-link {
+            float: right;
+            opacity: 0.7;
+        }
+        .steam-link:hover {
+            opacity: 1.0;
+        }
     </style>
 </head>
 <body>
@@ -59,6 +67,9 @@
             </div>
             <div class="content">
                 <div class="gradient"></div>
+                <a class="steam-link" v-if="game.steamAppId" :href="`https://store.steampowered.com/app/${game.steamAppId}`" target="_blank">
+                    <img src="icons/link.svg" alt="link" />
+                </a>
                 <h2>
                     {{ game.title }}
                 </h2>
