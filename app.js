@@ -92,6 +92,23 @@ window.app = new Vue({
             this.games.forEach(g => this.updateGameIndex(g));
             this.sortByName();
         },
+        loadGfNow: async function() {
+            const res = await fetch("https://static.nvidiagrid.net/supported-public-game-list/locales/gfnpc-en-US.json?JSON");
+            const json = await res.json();
+            console.log(`GFN returned ${json.length} entries`);
+            const byName = {};
+            const platMap = {
+                "Steam": "steam",
+                "Epic": "epic",
+                "Ubisoft Connect": "uplay"
+            }
+            json.forEach(g => (byName[g.title.toLowerCase()] ||= []).push(platMap[g.store]));
+            this.games.forEach(g => {
+                const gfnPlats = byName[g.title.toLowerCase()];
+                if (gfnPlats && !g.platforms.includes("zgfn") && g.platforms.some(p => gfnPlats.includes(p)))
+                    g.platforms.push("zgfn");
+            })
+        },
         loadDbFile: function (ev) {
             if (!ev.dataTransfer)
                 return;
