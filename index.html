@@ -92,7 +92,7 @@
                 Drop galaxy-2.0.db onto the page to update games (in "C:\ProgramData\GOG.com\Galaxy\storage" by default)
                 <button @click="loadGfNow()">Load GFN</button>
                 <button title="Write games json to clipboard" @click="toClipboard()" :disabled="!games.length">export</button>
-                <input type="text" id="exportElem" tabindex="-1" aria-hidden="true">
+                <textarea id="exportElem" tabindex="-1" aria-hidden="true"></textarea>
             </div>
             <div id="filter">
                 <div>Filter:</div>

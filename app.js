@@ -218,7 +218,7 @@ window.app = new Vue({
         },
         toClipboard: function() {
             const elem = document.getElementById("exportElem");
-            elem.value = JSON.stringify(this.games);
+            elem.value = "[" + this.games.map(JSON.stringify).join(",\n") + "]";
             elem.select();
             document.execCommand("copy");
             elem.value = "";
