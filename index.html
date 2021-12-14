@@ -100,7 +100,7 @@
                     <img class="platform-image" v-for="plat in platforms" :src="`icons/${plat}.svg`" :alt="plat" width="18" height="18"
                          :class="{ hide: hiddenPlatforms[plat] }" @click="togglePlatform(plat)" />
                 </div>
-                <input type="text" v-model="filter" placeholder="Find" />
+                <input type="text" v-model="filter" placeholder="Find" ref="findInput" />
                 <button @click="shuffle()">shuffle</button>
                 <button @click="sortByName()">by name</button>
                 <button @click="sortByYear()">by year</button>
@@ -126,7 +126,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.3.0/dist/sql-wasm.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
-<script src="https://unpkg.com/vue-agile"></script>
+<script src="https://unpkg.com/vue-agile@1.1.3/dist/VueAgile.umd.min.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/vue-agile/dist/VueAgile.css">
 <link rel="stylesheet" href="app.css">
 <script src="app.js"></script>

@@ -47,6 +47,12 @@ window.app = new Vue({
             return this.filter.toLowerCase().split(/\s+/g);
         }
     },
+    watch: {
+        games: function(games) {
+            if (games && games.length)
+                setTimeout(() => this.$refs.findInput.focus());
+        }
+    },
     created: function() {
         this.npointId = new URLSearchParams(location.search).get("npoint");
         if (this.npointId) {
