@@ -52,20 +52,47 @@
     border-radius: 3px;
     height: 23px;
 }
-
-    .platform-container.filter {
-        position: initial;
-        display: inline-block;
-        margin: 6px 6px 0 6px;
-    }
-
-.platform-image {
-    margin: 2px;
+.platform-container.filter {
+    position: initial;
+    display: flex;
+    margin: 6px 6px 0 6px;
 }
 
-    .platform-image.hide {
-        opacity: 0.5;
-    }
+.platform-parent {
+    position: relative;
+    cursor: pointer;
+}
+.platform-image {
+    margin: 2px;
+    pointer-events: none;
+    user-select: none;
+}
+.platform-parent.hide > .platform-image, .platform-parent.exclude > .platform-image {
+    opacity: 0.5;
+}
+.platform-overlay {
+    display: none;
+    position: absolute;
+    line-height: 22px;
+    font-size: 22px;
+    font-weight: bold;
+    color: rgba(230,0,0,0.8);
+    top: 0;
+    left: 4px;
+    pointer-events: none;
+    user-select: none;
+}
+.platform-parent.exclude > .platform-overlay {
+    display: block;
+}
+
+.steam-link {
+    float: right;
+    opacity: 0.7;
+}
+.steam-link:hover {
+    opacity: 1.0;
+}
 
 h2 {
     margin-top: 0;

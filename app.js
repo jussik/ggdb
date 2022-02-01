@@ -18,12 +18,15 @@ Vue.component("game-view", {
     }
 });
 
+const PlatformVisibility = { Visible: 0, Hidden: 1, Excluded: 2 };
+
 window.app = new Vue({
     el: "#app",
     data: {
         loading: false,
         games: [],
-        hiddenPlatforms: {},
+        platformVisibility: {},
+        platformClasses: ["visible", "hide", "exclude"],
         filter: "",
         screenshots: [],
         npointId: null
@@ -235,10 +238,12 @@ window.app = new Vue({
             }
         },
         togglePlatform: function (plat) {
-            Vue.set(this.hiddenPlatforms, plat, !this.hiddenPlatforms[plat]);
+            Vue.set(this.platformVisibility, plat, ((this.platformVisibility[plat] || 0) + 1) % 3);
         },
-        isGameVisible: function(game) {
-            if (!game.platforms.some(p => !this.hiddenPlatforms[p]))
+        isGameVisible: function (game) {
+            if (!game.platforms.some(p => (this.platformVisibility[p] || 0) === PlatformVisibility.Visible))
+                return false;
+            if (game.platforms.some(p => (this.platformVisibility[p] || 0) === PlatformVisibility.Excluded))
                 return false;
             if (this.filterTokens)
                 return this.filterTokens.every(filter => game._textIndex.indexOf(filter) !== -1);
