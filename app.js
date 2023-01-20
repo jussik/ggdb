@@ -189,7 +189,7 @@ window.app = new Vue({
                         otherPlatforms: sortedReleases.slice(1),
                         addedDate: sortedReleases
                             .map(r => r.addedDate)
-                            .reduce((a, b) => (a || "").localeCompare(b || "") ? b : a, "")
+                            .reduce((a, b) => a < b ? a : b, null)
                     } : null;
                 })
                 .filter(r => r)
