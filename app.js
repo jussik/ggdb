@@ -215,7 +215,7 @@ window.app = new Vue({
                         year: year,
                         platforms: Array.from(plats.values()).sort(),
                         screenshots: g.screenshots
-                            ?  g.screenshots.map(f => f.replace("{formatter}", "").replace("{ext}", "jpg"))
+                            ?  g.screenshots.map(f => f.replace("{formatter}", "").replace("{ext}", "jpg").replace("_.", "."))
                             : []
                     }
                 });
