@@ -216,7 +216,8 @@ window.app = new Vue({
                         platforms: Array.from(plats.values()).sort(),
                         screenshots: g.screenshots
                             ?  g.screenshots.map(f => f.replace("{formatter}", "").replace("{ext}", "jpg").replace("_.", "."))
-                            : []
+                            : [],
+                        score: g.criticsScore ? g.criticsScore.toFixed(0) : undefined
                     }
                 });
             console.timeEnd("importing");
@@ -261,6 +262,10 @@ window.app = new Vue({
         },
         sortByAdded: function() {
             this.games.sort((a, b) => b.addedDate.localeCompare(a.addedDate)
+                || (a.sortingTitle || a.title).localeCompare(b.sortingTitle || b.title));
+        },
+        sortByScore: function() {
+            this.games.sort((a, b) => (b.score || 0) - (a.score || 0)
                 || (a.sortingTitle || a.title).localeCompare(b.sortingTitle || b.title));
         },
         shuffle: function() {

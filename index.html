@@ -68,6 +68,7 @@
                 <div>
                     <span v-if="game.year">{{ game.year }} | </span>
                     {{ game.genres.join(", ") }} | {{ game.themes.join(", ") }}
+                    <span v-if="game.score">| {{ game.score }}</span>
                 </div>
                 <p class="summary">{{ game.summary }}</p>
             </div>
@@ -99,6 +100,7 @@
                 <button @click="sortByName()">by name</button>
                 <button @click="sortByYear()">by year</button>
                 <button @click="sortByAdded()">by added</button>
+                <button @click="sortByScore()">by score</button>
             </div>
         </div>
         <div id="games">
